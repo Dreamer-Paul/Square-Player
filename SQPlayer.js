@@ -4,7 +4,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2019.5.3
+# Last Update: 2019.5.9
 
 一个简洁到极致的单曲播放器。
 
@@ -107,6 +107,10 @@ console.log("%c Square Player %c https://paugram.com ","color: #fff; margin: 1em
 
 class SQP_Extend {
     constructor(wrapper){
+        this.init(wrapper);
+    }
+
+    init(wrapper){
         this.players = [];
         wrapper = document.querySelectorAll(wrapper);
 
