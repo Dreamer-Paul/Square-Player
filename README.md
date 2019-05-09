@@ -7,6 +7,7 @@
 1. `Star` 本项目
 2. 从这里 [下载](https://github.com/Dreamer-Paul/Square-Player/archive/master.zip) 源码
 3. 可使用本地、网易云音乐两种方式食用，参照下面的快速食用指南即可快速部署完成
+4. 本项目提供 Typecho 插件版本，如需使用请先将下载后得到的文件夹从 `Square-Player-master` 重命名为 `SQP`
 
 ## 开源协议
 
@@ -77,3 +78,7 @@ data-163|网易云音乐的 ID 或歌名
 ```
 
 Enjoy it！
+
+# Typecho 插件版
+
+按照如上的配置直接粘贴在文章里即可使用

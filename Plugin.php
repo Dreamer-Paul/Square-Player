@@ -34,7 +34,7 @@ class SQP_Plugin implements Typecho_Plugin_Interface{
 
     public static function footer(){
         if(Typecho_Widget::widget('Widget_Archive') -> is("post")){
-            echo '<script src="' . Helper::options() -> pluginUrl . '"/SQP/SQPlayer.js"></script>';
+            echo '<script src="' . Helper::options() -> pluginUrl . '/SQP/SQPlayer.js"></script>';
         }
     }
 }
