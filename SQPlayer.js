@@ -4,7 +4,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2019.9.29
+# Last Update: 2020.2.28
 
 一个简洁到极致的单曲播放器。
 
@@ -25,9 +25,11 @@ class SQPlayer{
             toggle: this.creator("div", {cls: "toggle"})
         };
 
+        this.elements.wrap.setAttribute("loaded", "");
         this.elements.player.setAttribute("preload", "none");
-        _Players.push(this);
+
         wrapper.dataset[163] ? this.getBy163(wrapper, set.server) : this.setup(wrapper.dataset);
+        _Players.push(this);
     }
 
     // 切换按钮
@@ -37,6 +39,7 @@ class SQPlayer{
 
     play(){
         this.elements.player.play();
+        this.elements.toggle.classList.add("pause");
 
         _Players.forEach((item) => {
             if(item !== this) item.pause();
@@ -45,6 +48,7 @@ class SQPlayer{
 
     pause(){
         this.elements.player.pause();
+        this.elements.toggle.classList.remove("pause");
     }
 
     creator(tag, attr){
@@ -56,6 +60,12 @@ class SQPlayer{
         }
 
         return a;
+    }
+
+    destroy(){
+        this.pause();
+        this.elements.wrap.innerHTML = null;
+        this.elements.wrap.parentElement.removeChild(this.elements.wrap);
     }
 
     // 设置播放器
@@ -100,13 +110,6 @@ class SQPlayer{
         this.elements.toggle.addEventListener("click", () => {
             this.toggle();
         });
-
-        this.elements.player.addEventListener("playing", () => {
-            this.elements.toggle.classList.add("pause");
-        });
-        this.elements.player.addEventListener("pause", () => {
-            this.elements.toggle.classList.remove("pause");
-        });
     }
 
     getBy163(value, server){
@@ -123,9 +126,9 @@ class SQPlayer{
                         title:  item.name,
                         artist: item.artist,
                         cover:  item.cover,
-                        link:   item.url,
+                        link:   item.url
                     });
-                })
+                });
             },
             "paul": () => {
                 const type = isNaN(value) ? "?title=" : "?id=";
@@ -149,16 +152,22 @@ class SQP_Extend {
         this.init(settings);
     }
 
-    init(settings){
+    init(settings = {server: "meto"}){
         this.players = [];
         this.wrapper = document.querySelectorAll("sqp");
 
         this.wrapper.forEach(function (item, key) {
-            this.players.push(new SQPlayer(item, key, settings));
-        }, this)
+            if(!item.hasAttribute("loaded")) this.players.push(new SQPlayer(item, key, settings));
+        }, this);
+    }
+
+    destroy(){
+        this.players.forEach((item) => {
+            item.destroy();
+        })
     }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    let SQP_EX = new SQP_Extend({server: "meto"});
+    window.SQP_Extend = new SQP_Extend();
 });
