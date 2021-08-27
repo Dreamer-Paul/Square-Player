@@ -4,7 +4,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2020.2.28
+# Last Update: 2021.8.27
 
 一个简洁到极致的单曲播放器。
 
@@ -12,14 +12,14 @@
 
 ---- */
 
-let _Players = [];
+window._SQPPlayers = [];
 
 class SQPlayer{
     constructor(wrapper, key, set){
         this.key = key;
         this.elements = {
             wrap: wrapper,
-            player: this.creator("audio"),
+            player: new Audio(),
             info: this.creator("div", {cls: "info"}),
             title: this.creator("span", {cls: "title"}),
             toggle: this.creator("div", {cls: "toggle"})
@@ -29,7 +29,7 @@ class SQPlayer{
         this.elements.player.setAttribute("preload", "none");
 
         wrapper.dataset[163] ? this.getBy163(wrapper, set.server) : this.setup(wrapper.dataset);
-        _Players.push(this);
+        _SQPPlayers.push(this);
     }
 
     // 切换按钮
@@ -37,20 +37,23 @@ class SQPlayer{
         this.elements.player.paused ? this.play() : this.pause();
     }
 
+    // 播放
     play(){
         this.elements.player.play();
         this.elements.toggle.classList.add("pause");
 
-        _Players.forEach((item) => {
-            if(item !== this) item.pause();
+        _SQPPlayers.forEach(item => {
+            if(item.key !== this.key) item.pause();
         })
     }
 
+    // 暂停
     pause(){
         this.elements.player.pause();
         this.elements.toggle.classList.remove("pause");
     }
 
+    // 元素创建器
     creator(tag, attr){
         let a = document.createElement(tag);
 
@@ -62,10 +65,17 @@ class SQPlayer{
         return a;
     }
 
+    // 销毁
     destroy(){
-        this.pause();
+        this.elements.player.pause();
+        this.elements.toggle.removeEventListener("click", this.toggle);
+
         this.elements.wrap.innerHTML = null;
         this.elements.wrap.parentElement.removeChild(this.elements.wrap);
+
+        this.elements = undefined;
+
+        _SQPPlayers.splice(_SQPPlayers.indexOf(this), 1)
     }
 
     // 设置播放器
@@ -107,33 +117,29 @@ class SQPlayer{
             this.elements.wrap.appendChild(ani);
         }
 
-        this.elements.toggle.addEventListener("click", () => {
-            this.toggle();
-        });
+        this.elements.toggle.addEventListener("click", this.toggle.bind(this));
     }
 
     getBy163(value, server){
         let id = value.getAttribute("data-163");
 
-        const s = {
+        const getAPI = {
             "meto": () => {
-                fetch(`https://api.i-meto.com/meting/api?server=netease&id=${id}`).then((res) => {
+                fetch("https://api.i-meto.com/meting/api?server=netease&id=" + id).then((res) => {
                     return res.json();
                 }).then((item) => {
                     item = item[0];
 
                     this.setup({
-                        title:  item.name,
-                        artist: item.artist,
-                        cover:  item.cover,
-                        link:   item.url
+                        title: item.title,
+                        artist: item.author,
+                        cover: item.pic,
+                        link: item.url
                     });
                 });
             },
             "paul": () => {
-                const type = isNaN(value) ? "?title=" : "?id=";
-
-                fetch("https://api.paugram.com/netease/" + type + id).then(function (res) {
+                fetch("https://api.paugram.com/netease/?id=" + id).then(function (res) {
                     return res.json();
                 }).then((item) => {
                     this.setup(item);
@@ -141,7 +147,7 @@ class SQPlayer{
             }
         }
 
-        s[server]();
+        getAPI[server]();
     }
 }
 
@@ -149,25 +155,25 @@ console.log("%c Square Player %c https://paugram.com ","color: #fff; margin: 1em
 
 class SQP_Extend {
     constructor(settings){
-        this.init(settings);
+        this.settings = settings;
+        this.init();
     }
 
-    init(settings = {server: "meto"}){
-        this.players = [];
+    init(){
         this.wrapper = document.querySelectorAll("sqp");
 
         this.wrapper.forEach(function (item, key) {
-            if(!item.hasAttribute("loaded")) this.players.push(new SQPlayer(item, key, settings));
+            if(!item.hasAttribute("loaded")) new SQPlayer(item, key + new Date().getTime(), this.settings);
         }, this);
     }
 
     destroy(){
-        this.players.forEach((item) => {
+        _SQPPlayers.forEach((item) => {
             item.destroy();
         })
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    window.SQP_Extend = new SQP_Extend();
+window._SQP_Extend = new SQP_Extend({
+    server: "meto"
 });
