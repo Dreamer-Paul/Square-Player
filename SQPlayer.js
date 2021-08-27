@@ -168,9 +168,13 @@ class SQP_Extend {
     }
 
     destroy(){
-        _SQPPlayers.forEach((item) => {
-            item.destroy();
-        })
+        let i = _SQPPlayers.length;
+        
+        while(_SQPPlayers.length > 0){
+            i--;
+
+            _SQPPlayers[i].destroy();
+        }
     }
 }
 
