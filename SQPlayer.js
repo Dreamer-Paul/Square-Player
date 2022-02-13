@@ -4,7 +4,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2021.8.27
+# Last Update: 2022.2.13
 
 一个简洁到极致的单曲播放器。
 
@@ -20,9 +20,9 @@ class SQPlayer{
         this.elements = {
             wrap: wrapper,
             player: new Audio(),
-            info: this.creator("div", {cls: "info"}),
-            title: this.creator("span", {cls: "title"}),
-            toggle: this.creator("div", {cls: "toggle"})
+            info: this.creator("div", { className: "info" }),
+            title: this.creator("span", { className: "title" }),
+            toggle: this.creator("div", { className: "toggle" })
         };
 
         this.elements.wrap.setAttribute("loaded", "");
@@ -40,7 +40,6 @@ class SQPlayer{
     // 播放
     play(){
         this.elements.player.play();
-        this.elements.toggle.classList.add("pause");
 
         _SQPPlayers.forEach(item => {
             if(item.key !== this.key) item.pause();
@@ -50,19 +49,18 @@ class SQPlayer{
     // 暂停
     pause(){
         this.elements.player.pause();
-        this.elements.toggle.classList.remove("pause");
     }
 
     // 元素创建器
     creator(tag, attr){
-        let a = document.createElement(tag);
+        let _t = document.createElement(tag);
 
         if(attr){
-            if(attr.cls) a.className = "sqp-" + attr.cls;
-            if(attr.content) a.innerHTML = attr.content;
+            if(attr.className) _t.className = `sqp-${attr.className}`;
+            if(attr.content)   _t.innerHTML = attr.content;
         }
 
-        return a;
+        return _t;
     }
 
     // 销毁
@@ -80,16 +78,16 @@ class SQPlayer{
 
     // 设置播放器
     setup(item){
-        const fontSize = window.getComputedStyle(document.querySelector("html")).fontSize.replace("px", "");
+        const fontSize = parseInt(window.getComputedStyle(document.querySelector("html")).fontSize.replace("px", ""));
 
-        item.link ? this.elements.player.src = item.link : console.error("No files to play!");
+        item.link ? this.elements.player.src = item.link : console.error("SQP: Error, No files to play!");
 
         if(item.cover){
             this.elements.wrap.style.backgroundImage = "url(" + item.cover + ")";
         }
 
         // 播放器主体初始化
-        this.elements.title.innerText = item.artist && item.title ? item.title + " - " + item.artist : "未知标题";
+        this.elements.title.innerText = item.artist && item.title ? `${item.title} - ${item.artist}` : "未知标题";
 
         this.elements.info.appendChild(this.elements.title);
         this.elements.wrap.appendChild(this.elements.info);
@@ -98,7 +96,7 @@ class SQPlayer{
         let offset = this.elements.title.offsetWidth - (fontSize * 8);
         let time = parseInt(this.elements.title.offsetWidth / 30);
 
-        const ani = this.creator("style", {content: `
+        const ani = this.creator("style", { content: `
 @keyframes sqp-title-${this.key} {
     0%{
         transform: translateX(0);
@@ -113,11 +111,18 @@ class SQPlayer{
 `});
 
         if(offset > 0){
-            this.elements.title.style.animation = "sqp-title-" + this.key + " " + time + "s infinite linear";
+            this.elements.title.style.animation = `sqp-title-${this.key} ${time}s infinite linear`;
             this.elements.wrap.appendChild(ani);
         }
 
         this.elements.toggle.addEventListener("click", this.toggle.bind(this));
+
+        this.elements.player.addEventListener("play", () => {
+            this.elements.toggle.classList.add("pause");
+        });
+        this.elements.player.addEventListener("pause", () => {
+            this.elements.toggle.classList.remove("pause");
+        });
     }
 
     getBy163(value, server){
