@@ -2,7 +2,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2019.9.29
+# Last Update: 2024.4.20
 
 一个简洁到极致的单曲播放器。
 
@@ -28,17 +28,6 @@ sqp[left] {
     margin: 0 1em 1em 0;
 }
 
-sqp:empty:before {
-    padding: 1em;
-    display: block;
-    font-size: .75em;
-    text-align: center;
-    content: "加载中...";
-}
-sqp.error:empty::before {
-    content: "数据获取失败";
-}
-
 sqp .sqp-info {
     left: 0;
     right: 0;
@@ -46,7 +35,8 @@ sqp .sqp-info {
     padding: .75em 0;
     font-size: .75em;
     position: absolute;
-    background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .6), rgba(0, 0, 0, .8));
+    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, .4);
 }
 
 sqp .sqp-title {
@@ -63,7 +53,8 @@ sqp .sqp-toggle {
     position: relative;
     border-radius: 66%;
     display: inline-block;
-    box-shadow: 0 0 1em rgba(0, 0, 0, .5);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 0 0 .25em rgba(0, 0, 0, .4);
     transform: translate(calc(4em - 50%), 100%);
     transition: opacity .3s, width .3s, height .3s, transform .3s;
     background: #fff center/1em no-repeat;

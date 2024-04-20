@@ -24,22 +24,27 @@ class SQPlayer {
       wrap: wrapper,
       player: new Audio(),
       info: this.creator("div", { className: "info" }),
-      title: this.creator("span", { className: "title" }),
+      title: this.creator("span", { className: "title", content: "加载中..." }),
       toggle: this.creator("div", { className: "toggle" })
     };
 
     this.elements.wrap.setAttribute("loaded", "");
     this.elements.player.setAttribute("preload", "none");
 
-    wrapper.dataset[163] ? this.getBy163(wrapper, set.server) : this.setup(wrapper.dataset);
+    if (wrapper.dataset.cid) {
+      this.setupByCloudMusic(wrapper.dataset.cid, set.server);
+    }
+    else {
+      this.setup(wrapper.dataset);
+    }
 
-    return this;
+    this.elements.info.appendChild(this.elements.title);
+    this.elements.wrap.appendChild(this.elements.info);
+    this.elements.wrap.appendChild(this.elements.toggle);
   }
 
-  // 切换按钮
-  toggle = () => {
-    this.elements.player.paused ? this.play() : this.pause();
-  }
+  // 切换
+  toggle = () => this.events.onToggle();
 
   // 播放
   play = () => {
@@ -59,26 +64,56 @@ class SQPlayer {
   creator(tag, attr) {
     const el = document.createElement(tag);
 
-    if (attr) {
-      if (attr.className) el.className = `sqp-${attr.className}`;
-      if (attr.content) el.innerHTML = attr.content;
+    if (attr?.className) {
+      el.className = `sqp-${attr.className}`;
+    }
+
+    if (attr?.content) {
+      el.innerHTML = attr.content;
     }
 
     return el;
   }
 
   // 事件
-  onPlay = () => {
-    this.elements.toggle.classList.add("playing");
+  events = {
+    onToggle: () => {
+      this.elements.player.paused ? this.play() : this.pause();
+    },
+    onPlay: () => {
+      this.elements.toggle.classList.add("playing");
+    },
+    onPause: () => {
+      this.elements.toggle.classList.remove("playing");
+    },
   }
-  onPause = () => {
-    this.elements.toggle.classList.remove("playing");
+
+  // 修改元素的操作
+  modify = {
+    updateTitleText: (nextTitle) => {
+      const fontSize = Number(window.getComputedStyle(document.querySelector("html")).fontSize.replace("px", ""));
+
+      const el = this.elements.title;
+      el.innerText = nextTitle;
+
+      const offset = el.offsetWidth - (fontSize * 8);
+      const duration = parseInt(el.offsetWidth / 30) * 1000;
+  
+      if (offset > 0) {
+        el.animate([
+          { transform: "translateX(0)" },
+          { transform: `translateX(${-offset}px)` },
+          { transform: "translateX(0)" },
+        ], {
+          duration,
+          iterations: Infinity,
+        });
+      }
+    },
   }
 
   // 设置播放器
   setup = (item) => {
-    const fontSize = Number(window.getComputedStyle(document.querySelector("html")).fontSize.replace("px", ""));
-
     // 播放器主体初始化
     let titleText = "未知标题";
 
@@ -97,55 +132,40 @@ class SQPlayer {
       console.error("SQP: Error, No files to play!");
     }
 
+    this.modify.updateTitleText(titleText);
+
     if (item.cover) {
       this.elements.wrap.style.backgroundImage = `url(${item.cover})`;
     }
 
-    this.elements.title.innerText = titleText;
-    this.elements.info.appendChild(this.elements.title);
-    this.elements.wrap.appendChild(this.elements.info);
-    this.elements.wrap.appendChild(this.elements.toggle);
-
-    const offset = this.elements.title.offsetWidth - (fontSize * 8);
-    const duration = parseInt(this.elements.title.offsetWidth / 30) * 1000;
-
-    if (offset > 0) {
-      this.elements.title.animate([
-        { transform: "translateX(0)" },
-        { transform: `translateX(${-offset}px)` },
-        { transform: "translateX(0)" },
-      ], {
-        duration,
-        iterations: Infinity,
-      });
-    }
-
-    this.elements.toggle.addEventListener("click", this.toggle);
-    this.elements.player.addEventListener("play", this.onPlay);
-    this.elements.player.addEventListener("pause", this.onPause);
+    this.elements.toggle.addEventListener("click", this.events.onToggle);
+    this.elements.player.addEventListener("play", this.events.onPlay);
+    this.elements.player.addEventListener("pause", this.events.onPause);
   }
 
   // 销毁
   destroy = () => {
     this.elements.player.pause();
-    this.elements.toggle.removeEventListener("click", this.toggle);
-    this.elements.player.removeEventListener("play", this.onPlay);
-    this.elements.player.removeEventListener("pause", this.onPause);
+    this.elements.toggle.removeEventListener("click", this.events.onToggle);
+    this.elements.player.removeEventListener("play", this.events.onPlay);
+    this.elements.player.removeEventListener("pause", this.events.onPause);
 
-    this.elements.wrap.parentElement.removeChild(this.elements.wrap);
+    this.elements.wrap.remove();
     this.elements.wrap = undefined;
     this.elements = undefined;
   }
 
-  getBy163 = (value, server) => {
-    const id = value.getAttribute("data-163");
-
+  setupByCloudMusic = (cid, server) => {
     const getData = {
       "meto": () => (
-        fetch(`https://api.i-meto.com/meting/api?server=netease&id=${id}`).then(
+        fetch(`https://api.i-meto.com/meting/api?server=netease&id=${cid}`).then(
           (res) => res.json()
         ).then((items) => {
           const item = items[0];
+
+          if (!item) {
+            throw new Error("返回数据为空");
+          }
 
           this.setup({
             title: item.title,
@@ -156,7 +176,7 @@ class SQPlayer {
         })
       ),
       "paul": () => (
-        fetch(`https://api.paugram.com/netease/?id=${id}`).then(
+        fetch(`https://api.paugram.com/netease/?id=${cid}`).then(
           (res) => res.json()
         ).then((item) => {
           this.setup(item);
@@ -165,8 +185,8 @@ class SQPlayer {
     };
 
     if (server in getData) {
-      getData[server]().catch(() => {
-        this.elements.wrap.classList.add("error");
+      getData[server]().catch((err) => {
+        this.modify.updateTitleText(`获取数据异常：${err.message}`);
       });
     }
   }
