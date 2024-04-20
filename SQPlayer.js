@@ -4,7 +4,7 @@
 
 # Square Player
 # By: Dreamer-Paul
-# Last Update: 2023.1.27
+# Last Update: 2024.4.20
 
 一个简洁到极致的单曲播放器。
 
@@ -107,26 +107,17 @@ class SQPlayer {
     this.elements.wrap.appendChild(this.elements.toggle);
 
     const offset = this.elements.title.offsetWidth - (fontSize * 8);
-    const time = parseInt(this.elements.title.offsetWidth / 30);
-
-    const ani = this.creator("style", {
-      content: `
-@keyframes sqp-title-${this.key} {
-    0%{
-        transform: translateX(0);
-    }
-    50%{
-        transform: translateX(${-offset}px);
-    }
-    100%{
-       transform: translateX(0);
-    }
-}
-`});
+    const duration = parseInt(this.elements.title.offsetWidth / 30) * 1000;
 
     if (offset > 0) {
-      this.elements.title.style.animation = `sqp-title-${this.key} ${time}s infinite linear`;
-      this.elements.wrap.appendChild(ani);
+      this.elements.title.animate([
+        { transform: "translateX(0)" },
+        { transform: `translateX(${-offset}px)` },
+        { transform: "translateX(0)" },
+      ], {
+        duration,
+        iterations: Infinity,
+      });
     }
 
     this.elements.toggle.addEventListener("click", this.toggle);
